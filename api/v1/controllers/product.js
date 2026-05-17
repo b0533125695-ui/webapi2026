@@ -1,6 +1,19 @@
+const mysqldb=require('../models/mysqldb');
 module.exports={
     getAll:(req,res)=>{
-    res.status(200).json({msg:`all products`});
+
+        const sql='SELECT * FROM T_Product';
+        mysqldb.query(sql,(error,results,fields)=>{
+            if (error==null){
+               console.log(results);
+               return res.status(200).json(results);
+            }
+            else{
+                console.log(error);
+                return res.status(500).json(error);
+            }
+})
+    // res.status(200).json({msg:`all products`});
 },
     getById:(req,res)=>{
     const pid=req.params.id;
