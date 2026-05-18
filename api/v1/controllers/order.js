@@ -1,7 +1,7 @@
 module.exports={
     getAll:(req,res)=>{
     res.status(200).json({msg:`all orders`});
-},
+},   
     getById:(req,res)=>{
     const OrdId=req.params.id;
     res.status(200).json({msg:`got order id ${OrdId}`});
