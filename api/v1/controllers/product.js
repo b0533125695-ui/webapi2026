@@ -17,10 +17,19 @@ module.exports={
 },
     getById:(req,res)=>{
     const pid=req.params.id;
-    res.status(200).json({msg:`got product id ${pid}`});
+    const sql=`SELECT * FROM t_Product WHERE pid=${pid}`;
+        mysqldb.query(sql,(error,results,fields)=>{
+            if (error==null){
+               console.log(results);
+               return res.status(200).json(results);
+            }
+            else{
+                console.log(error);
+                return res.status(500).json(error);
+            }
+        });
 },
     add:(req,res)=>{
-    //הוספת מוצר חדש
     res.status(200).json({msg:`add a product`});
 },
     update:(req,res)=>{
@@ -29,6 +38,17 @@ module.exports={
 },
     delete:(req,res)=>{
     const pid=req.params.id;
-    res.status(200).json({msg:`delete product id  ${pid}`});
-}
+    const sql=`DELETE FROM t_Product WHERE pid=${pid}`;
+        mysqldb.query(sql,(error,results,fields)=>{
+            if (error==null){
+               console.log(results);
+               return res.status(200).json(results);
+            }
+            else{
+                console.log(error);
+                return res.status(500).json(error);
+            }
+        });
+    }
+
 }
