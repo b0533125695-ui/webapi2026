@@ -30,12 +30,53 @@ module.exports={
         });
 },
     add:(req,res)=>{
-    res.status(200).json({msg:`add a product`});
+    const pid=req.params.id;
+    let data=req.body;
+    let arr=Object.keys(data);
+    let keys='';
+    let values='';
+    for (let i=0;i<arr.length;i++)
+    {
+        keys+=`${arr[i]},`;
+        values+=`'${data[arr[i]]}',`;
+    }
+    keys=keys.substring(0,keys.length-1);
+    values=values.substring(0,values.length-1);
+     let sql=`INSERT INTO t_Product (${keys}) VALUES (${values})`;
+    mysqldb.query(sql,(error,results,fields)=>{
+        if (error==null){
+           console.log(results);
+            return res.status(200).json(results);
+     }
+        else{
+            console.log(error);
+            return res.status(500).json(error);
+            }
+        
+   });
 },
     update:(req,res)=>{
-    const pid=req.params.id;//עדכון מוצר ע"פ הקוד מוצר
-    res.status(200).json({msg:`update product id  ${pid}`});
-},
+    const pid=req.params.id;
+    let sql='UPDATE t_Product SET ';
+    let data=req.body;
+    let arr=Object.keys(data);
+    for (let i=0;i<arr.length;i++)
+    {
+        sql+=`${arr[i]}='${data[arr[i]]}',`;
+    }
+    sql=sql.substring(0,sql.length-1);
+    sql+=` WHERE pid=${pid}`;
+    mysqldb.query(sql,(error,results,fields)=>{
+        if (error==null){
+           console.log(results);
+            return res.status(200).json(results);
+     }
+        else{
+            console.log(error);
+            return res.status(500).json(error);
+            }
+        });
+    },
     delete:(req,res)=>{
     const pid=req.params.id;
     const sql=`DELETE FROM t_Product WHERE pid=${pid}`;
@@ -50,5 +91,4 @@ module.exports={
             }
         });
     }
-
 }   
