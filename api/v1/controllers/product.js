@@ -76,7 +76,7 @@ module.exports={
             return res.status(500).json(error);
             }
         });
-    },
+},
     delete:(req,res)=>{
     const pid=req.params.id;
     const sql=`DELETE FROM t_Product WHERE pid=${pid}`;
@@ -90,5 +90,5 @@ module.exports={
                 return res.status(500).json(error);
             }
         });
-    }
+}
 }   
