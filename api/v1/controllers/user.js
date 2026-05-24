@@ -2,7 +2,7 @@ const mysqldb=require('../models/mysqldb');
 module.exports={
     getAll:(req,res)=>{
 
-        const sql='SELECT * FROM t_user';
+        const sql='SELECT * FROM t_category';
         mysqldb.query(sql,(error,results,fields)=>{
             if (error==null){
                console.log(results);
@@ -16,8 +16,8 @@ module.exports={
     // res.status(200).json({msg:`all Users`});
 },
     getById:(req,res)=>{
-    const Userid=req.params.id;
-    const sql=`SELECT * FROM t_user WHERE Userid=${Userid}`;
+    const catid=req.params.id;
+    const sql=`SELECT * FROM t_category WHERE catid=${catid}`;
         mysqldb.query(sql,(error,results,fields)=>{
             if (error==null){
                console.log(results);
@@ -30,7 +30,7 @@ module.exports={
         });
 },
     add:(req,res)=>{
-    const Userid=req.params.id;
+    const catid=req.params.id;
     let data=req.body;
     let arr=Object.keys(data);
     let keys='';
@@ -42,7 +42,7 @@ module.exports={
     }
     keys=keys.substring(0,keys.length-1);
     values=values.substring(0,values.length-1);
-     let sql=`INSERT INTO t_user (${keys}) VALUES (${values})`;
+     let sql=`INSERT INTO t_category (${keys}) VALUES (${values})`;
     mysqldb.query(sql,(error,results,fields)=>{
         if (error==null){
            console.log(results);
@@ -56,8 +56,8 @@ module.exports={
    });
 },
     update:(req,res)=>{
-    const Userid=req.params.id;
-    let sql='UPDATE t_user SET ';
+    const catid=req.params.id;
+    let sql='UPDATE t_category SET ';
     let data=req.body;
     let arr=Object.keys(data);
     for (let i=0;i<arr.length;i++)
@@ -65,7 +65,7 @@ module.exports={
         sql+=`${arr[i]}='${data[arr[i]]}',`;
     }
     sql=sql.substring(0,sql.length-1);
-    sql+=` WHERE Userid=${Userid}`;
+    sql+=` WHERE catid=${catid}`;
     mysqldb.query(sql,(error,results,fields)=>{
         if (error==null){
            console.log(results);
@@ -78,8 +78,8 @@ module.exports={
         });
 },
     delete:(req,res)=>{
-    const Userid=req.params.id;
-    const sql=`DELETE FROM t_user WHERE Userid=${Userid}`;
+    const catid=req.params.id;
+    const sql=`DELETE FROM t_category WHERE catid=${catid}`;
         mysqldb.query(sql,(error,results,fields)=>{
             if (error==null){
                console.log(results);
