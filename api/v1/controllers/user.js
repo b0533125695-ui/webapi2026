@@ -1,11 +1,11 @@
 const bcrypt = require('bcrypt');
 const mysqldb = require('../models/mysqldb');
-
+const jwt = require('jsonwebtoken');
 module.exports = {
     getAll: (req, res) => {
         const sql = 'SELECT * FROM t_user';
 
-        mysqldb.query(sql, (error, results ) => {
+        mysqldb.query(sql, (error, results) => {
             if (error == null) {
                 console.log(results);
                 return res.status(200).json(results);
@@ -16,10 +16,10 @@ module.exports = {
         });
     },
 
-    getById: (req, res) => {
+    getById: (req, res)=> {
         const userID = req.params.id;
         const sql = `SELECT * FROM t_user WHERE userID=${userID}`;
-        mysqldb.query(sql, (error, results ) => {
+        mysqldb.query(sql, (error, results) => {
             if (error == null) {
                 console.log(results);
                 return res.status(200).json(results);
@@ -36,7 +36,7 @@ module.exports = {
         let keys = '';
         let values = '';
         let sql = `SELECT * FROM t_user WHERE email='${data.email}'`;
-        mysqldb.query(sql, (error, results ) => {
+        mysqldb.query(sql, (error, results) => {
             if (error != null) {
                 console.log(error);
                 return res.status(500).json(error);
@@ -60,7 +60,7 @@ module.exports = {
             values = values.substring(0, values.length - 1);
             sql = `INSERT INTO t_user (${keys}) VALUES (${values})`;
 
-            mysqldb.query(sql, (error, results ) => {
+            mysqldb.query(sql, (error, results) => {
                 if (error == null) {
                     console.log(results);
                     return res.status(200).json(results);
@@ -77,8 +77,8 @@ module.exports = {
         let sql = 'UPDATE t_user SET ';
         const data = req.body;
         const arr = Object.keys(data);
-        
-        
+
+
         for (let i = 0; i < arr.length; i++) {
             if (arr[i] == 'pass') {
                 const pass = data[arr[i]];
@@ -86,14 +86,14 @@ module.exports = {
                 sql += `${arr[i]}='${hashPass}',`;
             }
             else {
-            sql += `${arr[i]}='${data[arr[i]]}',`; 
+                sql += `${arr[i]}='${data[arr[i]]}',`;
             }
         }
 
         sql = sql.substring(0, sql.length - 1);
         sql += ` WHERE userID=${userID}`;
 
-        mysqldb.query(sql, (error, results ) => {
+        mysqldb.query(sql, (error, results) => {
             if (error == null) {
                 console.log(results);
                 return res.status(200).json(results);
@@ -108,7 +108,7 @@ module.exports = {
         const userID = req.params.id;
         const sql = `DELETE FROM t_user WHERE userID=${userID}`;
 
-        mysqldb.query(sql, (error, results ) => {
+        mysqldb.query(sql, (error, results) => {
             if (error == null) {
                 console.log(results);
                 return res.status(200).json(results);
@@ -121,30 +121,34 @@ module.exports = {
 
     login: (req, res) => {
         const data = req.body;
-        
+
         let sql = `SELECT * FROM t_user WHERE email='${data.email}'`;
-        mysqldb.query(sql, (error, results ) => {
+        mysqldb.query(sql, (error, results) => {
             if (error != null) {
                 console.log(error);
-                return res.status(500).json({status:false,error: error.message, data: []});
-            } else if (results.length == 0)// המשתמש שנרשם לא קיים
-            {
-                return res.status(200).json({status:false,erroe:null, data: []});
+                return res.status(500).json({ status: false, error: error.message, data: [] });
             }
-            let user = results[0];
-            bcrypt.compare(data.pass, user.pass, (err, same) => {
-                if (err!= null) {
-                    console.log(err);
-                    return res.status(500).json({status:false,error: err.message, data: []});
-                }
-                if (same==true) {
-                    return res.status(200).json({status:true,error: null, data: user});
-                }
-                else{
-                    return res.status(200).json({status:false,error: null, data: []});
-                }
-            });
+            else if (results.length == 0)// המשתמש שנרשם לא קיים
+            {
+                return res.status(200).json({ status: false, error: null, data: [] });
+            }
+            else {
+                let user = results[0];
+                bcrypt.compare(data.pass, user.pass, (err, same) => {
+                    if (err != null) {
+                        console.log(err);
+                        return res.status(500).json({ status: false, error: err.message, data: [] });
+                    }
+                    if (same == true) {
+                        const token = jwt.sign({ userID: user.userID, email: user.email }, process.env.PRIVATE_KEY, { expiresIn: '1h' });
+                        return res.status(200).json({ status: true, error: null, data: user, token: token });
+                    }
+                    else {
+                        return res.status(200).json({ status: false, error: null, data: [] });
+                    }
+                });
+            }
         });
-    },
+    }
 
 };

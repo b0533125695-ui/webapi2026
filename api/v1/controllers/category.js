@@ -16,8 +16,8 @@ module.exports={
     // res.status(200).json({msg:`all products`});
 },
     getById:(req,res)=>{
-    const catid=req.params.id;
-    const sql=`SELECT * FROM t_category WHERE catID=${catid}`;
+    const cid=req.params.id;
+    const sql=`SELECT * FROM t_category WHERE cid=${cid}`;
         mysqldb.query(sql,(error,results,fields)=>{
             if (error==null){
                console.log(results);
@@ -30,7 +30,7 @@ module.exports={
         });
 },
     add:(req,res)=>{
-    const catid=req.params.id;
+    const cid=req.params.id;
     let data=req.body;
     let arr=Object.keys(data);
     let keys='';
@@ -56,7 +56,7 @@ module.exports={
    });
 },
     update:(req,res)=>{
-    const catid=req.params.id;
+    const cid=req.params.id;
     let sql='UPDATE t_category SET ';
     let data=req.body;
     let arr=Object.keys(data);
@@ -65,7 +65,7 @@ module.exports={
         sql+=`${arr[i]}='${data[arr[i]]}',`;
     }
     sql=sql.substring(0,sql.length-1);
-    sql+=` WHERE catid=${catid}`;
+    sql+=` WHERE cid=${cid}`;
     mysqldb.query(sql,(error,results,fields)=>{
         if (error==null){
            console.log(results);
@@ -78,8 +78,8 @@ module.exports={
         });
 },
     delete:(req,res)=>{
-    const catid=req.params.id;
-    const sql=`DELETE FROM t_category WHERE catid=${catid}`;
+    const cid=req.params.id;
+    const sql=`DELETE FROM t_category WHERE cid=${cid}`;
         mysqldb.query(sql,(error,results,fields)=>{
             if (error==null){
                console.log(results);

@@ -1,10 +1,10 @@
 const mysql=require('mysql2');
 const connection=mysql.createConnection({
-    host:'localhost',
-    user:'motyb',
-    password:'mb1470',
-    port:3306,
-    database:'webapi'
+    host:process.env.MYSQLSRV,
+    user:process.env.MYSQLUSER,
+    password:process.env.MYSQLPASS,
+    port:process.env.MYSQLPORT,
+    database:process.env.MYSQLDB
 })
 module.exports=connection;
 // const sql='SELECT * FROM T_Product';
