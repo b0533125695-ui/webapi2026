@@ -1,154 +1,94 @@
-const bcrypt = require('bcrypt');
-const mysqldb = require('../models/mysqldb');
-const jwt = require('jsonwebtoken');
-module.exports = {
-    getAll: (req, res) => {
-        const sql = 'SELECT * FROM t_user';
-
-        mysqldb.query(sql, (error, results) => {
-            if (error == null) {
-                console.log(results);
-                return res.status(200).json(results);
-            } else {
-                console.log(error);
-                return res.status(500).json(error);
-            }
-        });
-    },
-
-    getById: (req, res)=> {
-        const userID = req.params.id;
-        const sql = `SELECT * FROM t_user WHERE userID=${userID}`;
-        mysqldb.query(sql, (error, results) => {
-            if (error == null) {
-                console.log(results);
-                return res.status(200).json(results);
-            } else {
-                console.log(error);
-                return res.status(500).json(error);
-            }
-        });
-    },
-
-    add: (req, res) => {
-        const data = req.body;
-        const arr = Object.keys(data);
-        let keys = '';
-        let values = '';
-        let sql = `SELECT * FROM t_user WHERE email='${data.email}'`;
-        mysqldb.query(sql, (error, results) => {
-            if (error != null) {
-                console.log(error);
-                return res.status(500).json(error);
-            } else if (results.length > 0) {
-                return res.status(200).json({ msg: 'User already exists' }); // המשתמש כבר קיים
-            }
-
-            for (let i = 0; i < arr.length; i++) {
-                if (arr[i] === 'pass') {
-                    const pass = data[arr[i]];
-                    const hashPass = bcrypt.hashSync(pass, 10);
-                    keys += `${arr[i]},`;
-                    values += `'${hashPass}',`;
-                } else {
-                    keys += `${arr[i]},`;
-                    values += `'${data[arr[i]]}',`;
-                }
-            }
-
-            keys = keys.substring(0, keys.length - 1);
-            values = values.substring(0, values.length - 1);
-            sql = `INSERT INTO t_user (${keys}) VALUES (${values})`;
-
-            mysqldb.query(sql, (error, results) => {
-                if (error == null) {
-                    console.log(results);
-                    return res.status(200).json(results);
-                } else {
-                    console.log(error);
-                    return res.status(500).json(error);
-                }
-            });
-        });
-    },
-
-    update: (req, res) => {
-        const userID = req.params.id;
-        let sql = 'UPDATE t_user SET ';
-        const data = req.body;
-        const arr = Object.keys(data);
-
-
-        for (let i = 0; i < arr.length; i++) {
-            if (arr[i] == 'pass') {
-                const pass = data[arr[i]];
-                const hashPass = bcrypt.hashSync(pass, 10);
-                sql += `${arr[i]}='${hashPass}',`;
-            }
-            else {
-                sql += `${arr[i]}='${data[arr[i]]}',`;
-            }
+const bcrypt = require('bcrypt');//חיבור ספריית 'ביקריפט' להצפנת סיסמאות
+const jwt = require('jsonwebtoken');//חיבור ספריית 'ג'ייסון ווב טוקן' ליצירת טוקן למשתמשים
+const userModel = require('../models/user');//חיבור המודל של המשתמשים
+module.exports={
+    getAll: async (req,res)=>{
+        try{
+        const data=await userModel.find();//הצגת כל הלקוחות מבסיס הנתונים של מונגו די בי
+        return res.status(200).json(data);//החזרת המידע למשתמש בפורמט ג'ייסון
         }
-
-        sql = sql.substring(0, sql.length - 1);
-        sql += ` WHERE userID=${userID}`;
-
-        mysqldb.query(sql, (error, results) => {
-            if (error == null) {
-                console.log(results);
-                return res.status(200).json(results);
-            } else {
-                console.log(error);
-                return res.status(500).json(error);
-            }
-        });
-    },
-
-    delete: (req, res) => {
-        const userID = req.params.id;
-        const sql = `DELETE FROM t_user WHERE userID=${userID}`;
-
-        mysqldb.query(sql, (error, results) => {
-            if (error == null) {
-                console.log(results);
-                return res.status(200).json(results);
-            } else {
-                console.log(error);
-                return res.status(500).json(error);
-            }
-        });
-    },
-
-    login: (req, res) => {
-        const data = req.body;
-
-        let sql = `SELECT * FROM t_user WHERE email='${data.email}'`;
-        mysqldb.query(sql, (error, results) => {
-            if (error != null) {
-                console.log(error);
-                return res.status(500).json({ status: false, error: error.message, data: [] });
-            }
-            else if (results.length == 0)// המשתמש שנרשם לא קיים
-            {
-                return res.status(200).json({ status: false, error: null, data: [] });
-            }
-            else {
-                let user = results[0];
-                bcrypt.compare(data.pass, user.pass, (err, same) => {
-                    if (err != null) {
-                        console.log(err);
-                        return res.status(500).json({ status: false, error: err.message, data: [] });
-                    }
-                    if (same == true) {
-                        const token = jwt.sign({ userID: user.userID, email: user.email }, process.env.PRIVATE_KEY, { expiresIn: '1h' });
-                        return res.status(200).json({ status: true, error: null, data: user, token: token });
-                    }
-                    else {
-                        return res.status(200).json({ status: false, error: null, data: [] });
-                    }
-                });
-            }
-        });
+        catch(err)//אם יש שגיאה
+        {
+            console.log(err);//הדפסת השגיאה בקונסול
+            return res.status(500).json(err);//החזרת השגיאה למשתמש בפורמט ג'ייסון
+        }
+},
+    getById: async (req,res)=>{
+    const uid=req.params.id;//שמירה לתוך uid את קוד המשתמש שהתקבל מהמשתמש
+    try{
+        const data=await userModel.find({uid:uid});//הצגת המשתמש ממסד הנתונים של מונגו די בי, לפי קוד המשתמש שהתקבל מהמשתמש
+        return res.status(200).json(data);//החזרת המידע למשתמש בפורמט ג'ייסון
     }
-
+    catch(err)//אם יש שגיאה
+    {
+        console.log(err);//הדפסת השגיאה בקונסול
+        return res.status(500).json(err);//החזרת השגיאה למשתמש בפורמט ג'ייסון
+    }
+},
+    add:async (req, res) => {
+        try{
+        const { uid, fullname, email, pass } = req.body;//שמירת הערכים שהתקבלו מהמשתמש לתוך משתנים נפרדים ע"פ השדות שהוגדרו בסכימה
+        // Validation - בדיקה שהשדות החובה קיימים
+        if (!uid || !fullname || !email || !pass) {
+            return res.status(400).json({
+                error: 'Missing required fields: uid, fullname, email, pass'
+            });
+        }
+        //בדיקה שהמשתמש עדיין אינו קיים ע"פ השדה אימייל
+        const existingUser = await userModel.find({ email });//חיפוש משתמש קיים ע"פ כתובת האימייל שהתקבלה מהמשתמש
+        if (existingUser)//אם משתמש קיים
+        {
+            return res.status(400).json({ error: 'User with this email already exists' });// החזרת הודעת שגיאה למשתמש 'משתמש עם כתובת אימייל זו כבר קיים'
+        }
+        let userData = req.body;//שמירה לתוך userData את המידע שהתקבל מהמשתמש
+        userData.pass = await bcrypt.hash(pass, 10);//הצפנת הסיסמא שהתקבלה מהמשתמש
+        const newUser = await userModel.create(userData);//יצירת משתמש חדש ע"פ המידע שהתקבל מהמשתמש עם הסיסמא המוצפנת
+        return res.status(201).json(newUser);//החזרת המידע למשתמש בפורמט ג'ייסון
+       }//אם היה שגיאה כלשהי במהלך התהליך, היא תיתפס על ידי ה-catch ותודפס בקונסול ותוחזר למשתמש בפורמט ג'ייסון
+       catch(err){
+            console.log(err);
+            return res.status(500).json(err);
+       }
+},
+    update: async (req,res)=>{
+    try{
+        const uid = req.params.id;//שמירה לתוך Uid את קוד המשתמש שהתקבל מהמשתמש
+        const data = req.body;//שמירה לתוך data את המידע שהתקבל מהמשתמש
+       if (data.pass)//אם המשתמש רוצה לעדכן את הסיסמא, היא תוצפן מחדש
+        {
+        data.pass = hashPass = await bcrypt.hash(data.pass, 10);//הצפנת הסיסמא שהתקבלה מהמשתמש
+        }
+        const result=await userModel.updateOne({uid}, {$set: data});//עדכון המשתמש ע"פ המידע שהתקבל מהמשתמש
+        return res.status(200).json(result);//החזרת המידע למשתמש בפורמט ג'ייסון
+    }
+    catch(err){
+        console.log(err);
+        return res.status(500).json(err);
+    }
+},
+    delete: async (req, res) => {
+        const uid = req.params.id;//שמירה לתוך uid את קוד המשתמש שהתקבל מהמשתמש
+        try {
+            const data = await userModel.deleteOne({ uid: uid });//מחיקת המשתמש המבוקש
+            return res.status(200).json(data);//החזרת המידע למשתמש בפורמט ג'ייסון
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
+},
+    login: async (req, res) => {
+        const data = req.body;//שמירה לתוך data את המידע שהתקבל מהמשתמש
+        const user = await userModel.findOne({ email: data.email });//חיפוש המשתמש ע"פ כתובת האימייל שהתקבלה מהמשתמש
+        if (!user)//אם המשתמש לא קיים
+        {
+            return res.status(200).json({msg:'User / password not found' });//שם משתמש או סיסמא לא נמצאו
+        }
+        let isMatch = await bcrypt.compare(data.pass, user.pass);//השוואת הסיסמא שהתקבלה מהמשתמש עם הסיסמא המוצפנת במסד הנתונים
+        if (!isMatch)//אם הסיסמאות לא תואמות
+        {
+            return res.status(200).json({msg:'User / password not found' });//שם משתמש או סיסמא לא נמצאו
+        }
+        const token = jwt.sign({ uid: user.uid, email: user.email }, process.env.PRIVATE_KEY, { expiresIn: '1h' });//יצירת טוקן למשתמש עם פרטי המשתמש שהתקבלו מהמסד הנתונים תקף למשך שעה
+        return res.status(200).json({msg:'Login successful', token: token });//החזרת הטוקן למשתמש בפורמט ג'ייסון
+    }
 };
