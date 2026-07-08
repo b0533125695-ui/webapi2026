@@ -1,4 +1,4 @@
-const mysqldb=require('../models/mysqldb');
+// const mysqldb=require('../models/mysqldb');
 module.exports={
     getAll:(req,res)=>{
 
